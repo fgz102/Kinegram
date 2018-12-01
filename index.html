@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8" />
@@ -186,14 +186,14 @@
 					u_frames.classList.add("unselected");
 					frames_con.appendChild(u_frames);
 				}
-				if (img_unselected.length <= 6) {
+				if (img_unselected.length <= 3) {
 					delete_bt.style.display = "none";
 					bt_con[2].style.background = "grey";
 				} else {
 					for (var x = 0; x < u_frame.length; x++) {
 						u_frame[x].onclick = function(e) {
 							img_selected = document.getElementsByClassName("selected");
-							if (u_frame[e.target.index].classList.contains("unselected") && img_unselected.length > 6) {
+							if (u_frame[e.target.index].classList.contains("unselected") && img_unselected.length > 3) {
 								u_frame[e.target.index].classList.add("selected");
 								u_frame[e.target.index].classList.remove("unselected");
 								img_selected_list.push(e.target.index);
@@ -204,7 +204,7 @@
 							} else {
 								u_frame[e.target.index].classList.add("unselected");
 								u_frame[e.target.index].classList.remove("selected");
-								if (img_unselected.length > 6) {
+								if (img_unselected.length > 3) {
 									img_selected_list.pop(e.target.index);
 								}
 								unselected_frame_num.innerText = img_unselected.length;
