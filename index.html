@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>光栅动画@jklzm75</title>
+		<link rel="stylesheet" type="text/css" href="css/index.css">
+		<script type="text/javascript" src="js/index.js"></script>
+		<script type="text/javascript" src="js/rubbable.js"></script>
+	</head>
+	<body>
+		<div class="head">
+			<p>光栅动画(拖动下方栅格)</p>
+			<img src="img/cover.png" id="cover" style="cursor: move;" />
+			<img src="img/base.jpg" id="base" />
+		</div>
+		<div class="container">
+			<div id="bts_con">
+				<div class="bt_con" style="display: inline-block;">
+					上传GIF
+					<input type="file" id="upload_bt" accept="image/gif">
+				</div>
+				<div class="bt_con">
+					查看各帧
+					<button id="check_bt"></button>
+				</div>
+				<div class="bt_con">
+					删除帧
+					<button id="delete_bt"></button>
+				</div>
+				<div class="bt_con" style="width: 120px;">
+					合成底图和栅格
+					<button id="make_bt"></button>
+				</div>
+			</div>
+			<div class="uu_c">
+			</div>
+			<div id="frames_con">
+				<div id="unselected_frame_num_div">
+					<p>当前帧数:</p>
+					<p id="unselected_frame_num"></p>
+				</div>
+			</div>
+		</div>
+		<div class="foot">
+			<div id="cover_div"></div>
+			<div id="base_div"></div>
+		</div>
+		<div id="thankU">
+			<a>领个红包呗</a>
+			<div id="thankU_again">
+				<img src="img/A.png" width="300px">
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			var head = document.getElementsByClassName("head")[0];
+			var cover = document.getElementById("cover");
+			var x = 0;
+			var y = 0;
+			var l = 0;
+			var t = 0;
+			cover.onmousedown = function(e) {
+				e.preventDefault();
+				x = e.clientX;
+				l = cover.offsetLeft;
+				cover.onmousemove = function(e) {
+					e.preventDefault();
+					var nx = e.clientX;
+					var nl = nx - (x - l);
+					cover.style.left = nl + 'px';
+					if (cover.offsetLeft < 0) {
+						cover.style.left = '0px';
+					} else if (cover.offsetLeft + cover.clientWidth > head.offsetWidth) {
+						cover.style.left = head.offsetWidth - cover.clientWidth + 'px';
+					}
+				}
+			}
+			cover.onmouseup = function(e) {
+				cover.onmousemove = null;
+			}
+		</script>
+		<script type="text/javascript">
+			var uu_c = document.getElementsByClassName("uu_c")[0];
+			var bt_con = document.getElementsByClassName("bt_con");
+			var upload_bt = document.getElementById("upload_bt");
+			var img_list = [];
+			var img_selected_list = [];
+			var frames_num = 0;
+			var u_width = 0;
+			var u_height = 0;
+
+			window.onload = function pre_upload() {
+				upload_bt.addEventListener('change', (e) => {
+					this.img_list = [];
+					this.can_upload = true;
+					this.qiniu_url_list = [];
+					if (uu_c.childNodes.length > 1) {
+						var first_child = document.getElementsByClassName("jsgif")[0];
+						uu_c.removeChild(first_child);
+					}
+					if (frames_con.childNodes.length > 1) {
+						for (var x = 0; x < frames_num; x++) {
+							var first_child = document.getElementsByClassName("imgs")[0];
+							frames_con.removeChild(first_child);
+						}
+					}
+					if (/(image\/gif)/.test(e.path[0].files[0].type)) {
+						this.pre_load_gif(e.path[0].files[0])
+						return;
+					}
+					this.img_list = img_list
+				});
+				upload_bt.click();
+			}
+
+			function dataURLtoFile(dataurl, filename) {
+				const arr = dataurl.split(',');
+				const mime = arr[0].match(/:(.*?);/)[1];
+				const bstr = atob(arr[1]);
+				var n = bstr.length;
+				const u8arr = new Uint8Array(n);
+				while (n--) {
+					u8arr[n] = bstr.charCodeAt(n);
+				}
+				return new File([u8arr], filename, {
+					type: mime
+				});
+			}
+
+			function convertCanvasToImage(canvas, filename) {
+				return this.dataURLtoFile(canvas.toDataURL('image/png'), filename);
+			}
+
+			function pre_load_gif(gif_source) {
+				var img_list = [];
+				const gifImg = document.createElement('img');
+				gifImg.setAttribute('rel:animated_src', URL.createObjectURL(gif_source))
+				gifImg.setAttribute('rel:auto_play', '1')
+				uu_c.appendChild(gifImg);
+				var rub = new SuperGif({
+					gif: gifImg
+				});
+				rub.load(() => {
+					var img_list = [];
+					for (let i = 1; i <= rub.get_length(); i++) {
+						rub.move_to(i);
+						let cur_file = this.convertCanvasToImage(rub.get_canvas(), gif_source.name.replace('.gif', '') + `-${i}`)
+						img_list.push({
+							file_name: cur_file.name,
+							url: URL.createObjectURL(cur_file),
+							file: cur_file,
+						})
+					}
+					this.img_list = img_list
+					frames_num = img_list.length;
+					bt_con[0].style.display = "none";
+					bt_con[1].style.display = "inline-block";
+					bt_con[2].style.display = "none";
+					bt_con[3].style.display = "none";
+					unselected_frame_num_div.style.display = "none";
+					delete_bt.style.display = "block";
+					bt_con[2].style.background = "#282828";
+					u_width = rub.get_canvas().width;
+					u_height = rub.get_canvas().height;
+					clearChildren(cover_div);
+					clearChildren(base_div);
+				});
+			}
+		</script>
+		<script type="text/javascript">
+			var frames_con = document.getElementById("frames_con");
+			var check_bt = document.getElementById("check_bt");
+			var u_frame = document.getElementsByClassName("imgs");
+			var img_selected = null;
+			var img_unselected = document.getElementsByClassName("unselected");
+			var img_delected = document.getElementsByClassName("selected");
+			var unselected_frame_num_div = document.getElementById("unselected_frame_num_div");
+
+			check_bt.onclick = function() {
+				unselected_frame_num.innerText = frames_num;
+				for (var x = 0; x < img_list.length; x++) {
+					const u_frames = document.createElement('img');
+					u_frames.src = img_list[x].url;
+					u_frames.className = "imgs";
+					u_frames.index = x;
+					u_frames.classList.add("unselected");
+					frames_con.appendChild(u_frames);
+				}
+				if (img_unselected.length <= 6) {
+					delete_bt.style.display = "none";
+					bt_con[2].style.background = "grey";
+				} else {
+					for (var x = 0; x < u_frame.length; x++) {
+						u_frame[x].onclick = function(e) {
+							img_selected = document.getElementsByClassName("selected");
+							if (u_frame[e.target.index].classList.contains("unselected") && img_unselected.length > 6) {
+								u_frame[e.target.index].classList.add("selected");
+								u_frame[e.target.index].classList.remove("unselected");
+								img_selected_list.push(e.target.index);
+								unselected_frame_num.innerText = img_unselected.length;
+								u_frame[e.target.index].style.borderRightWidth = "thick";
+								u_frame[e.target.index].style.borderColor = "red";
+								u_frame[e.target.index].style.borderStyle = "solid";
+							} else {
+								u_frame[e.target.index].classList.add("unselected");
+								u_frame[e.target.index].classList.remove("selected");
+								if (img_unselected.length > 6) {
+									img_selected_list.pop(e.target.index);
+								}
+								unselected_frame_num.innerText = img_unselected.length;
+								u_frame[e.target.index].style.borderWidth = "thin";
+								u_frame[e.target.index].style.borderColor = "blue";
+								u_frame[e.target.index].style.borderStyle = "dashed";
+							}
+						}
+					}
+				}
+				if (frames_num > 10) {
+					alert("帧数太大,为最佳效果可以删除部分帧");
+				}
+				frames_con.style.display = "block";
+				unselected_frame_num_div.style.display = "block";
+				bt_con[1].style.display = "none";
+				bt_con[2].style.display = "inline-block";
+				bt_con[3].style.display = "inline-block";
+			}
+
+			var delete_bt = document.getElementById("delete_bt");
+			delete_bt.onclick = function() {
+				if (img_selected.length > 0) {
+					for (var x = 0; x < img_selected.length;) {
+						frames_con.removeChild(img_delected[x]);
+					}
+					delete_bt.style.display = "none";
+					bt_con[2].style.background = "grey";
+					for (var x = 0; x < u_frame.length; x++) {
+						u_frame[x].onclick = null;
+					}
+					frames_num = img_unselected.length;
+				}
+			}
+		</script>
+		<script type="text/javascript">
+			var cover_div = document.getElementById("cover_div");
+			var base_div = document.getElementById("base_div");
+			var make_bt = document.getElementById("make_bt");
+			var foot = document.getElementsByClassName("foot")[0];
+			var c2I_pic = document.getElementById("c2I_pic");
+
+			make_bt.onclick = function() {
+				var cover_canvas = document.createElement("canvas");
+				cover_canvas.id = "cover_canvas";
+				cover_div.appendChild(cover_canvas);
+				var cover_canvas = document.getElementById("cover_canvas");
+				cover_canvas.width = u_width;
+				cover_canvas.height = u_height;
+				var cc = cover_canvas.getContext("2d");
+
+				for (var y = 0; y < u_width; y = y + img_unselected.length) {
+					cc.fillStyle = "#000000";
+					cc.fillRect(y, 0, img_unselected.length - 1, u_height);
+				}
+
+				var base_canvas = document.createElement("canvas");
+				base_canvas.id = "base_canvas";
+				base_div.appendChild(base_canvas);
+				var base_canvas = document.getElementById("base_canvas");
+				base_canvas.width = u_width;
+				base_canvas.height = u_height;
+				var bc = base_canvas.getContext("2d");
+
+				for (var x = 0; x < img_unselected.length; x++) {
+					var trans_can = document.createElement("canvas");
+					trans_can.className = "trans_can";
+					base_div.appendChild(trans_can);
+					var trans_can = document.getElementsByClassName("trans_can")[x];
+					trans_can.width = u_width;
+					trans_can.height = u_height;
+					var tc = trans_can.getContext("2d");
+					tc.drawImage(img_unselected[x], 0, 0);
+					for (var y = x; y < u_width; y = y + img_unselected.length) {
+						tc.clearRect(y, 0, img_unselected.length - 1, u_height);
+					}
+
+					var c2I_pic = document.createElement("img");
+					c2I_pic.className = "c2I_pic";
+					c2I_pic.style.display = "none";
+					c2I_pic.src = c2I(trans_can).src;
+					foot.appendChild(c2I_pic);
+				}
+
+				var c2I_pic = document.getElementsByClassName("c2I_pic");
+				c2I_pic[c2I_pic.length - 1].onload = function() {
+					for (var x = 0; x < c2I_pic.length; x++) {
+						bc.drawImage(c2I_pic[x], 0, 0);
+					}
+				}
+
+				bt_con[0].style.display = "inline-block";
+				bt_con[2].style.display = "none";
+				bt_con[3].style.display = "none";
+				frames_con.style.display = "none";
+				var trans_can = document.getElementsByClassName("trans_can");
+				for (var x = 0; x < trans_can.length; x++) {
+					trans_can[x].style.display = "none";
+				}
+			}
+
+			cover_div.onmousedown = function(e) {
+				e.preventDefault();
+				x = e.clientX;
+				l = cover_div.offsetLeft;
+				cover_div.onmousemove = function(e) {
+					e.preventDefault();
+					var nx = e.clientX;
+					var nl = nx - (x - l);
+					cover_div.style.left = nl + 'px';
+					if (cover_div.offsetLeft < 0) {
+						cover_div.style.left = '0px';
+					} else if (cover_div.offsetLeft + cover_div.clientWidth > foot.offsetWidth) {
+						cover_div.style.left = foot.offsetWidth - cover_div.clientWidth + 'px';
+					}
+				}
+			}
+			cover_div.onmouseup = function(e) {
+				cover_div.onmousemove = null;
+			}
+
+			function c2I(canvas) {
+				var image = new Image();
+				image.src = canvas.toDataURL("image/png");
+				return image;
+			}
+
+			function clearChildren(div_element) {
+				var children_num = div_element.childNodes;
+				for (var i = children_num.length - 1; i >= 0; i--) {
+					div_element.removeChild(children_num[i]);
+				}
+			}
+
+			function sleep(d) {
+				for (var t = Date.now(); Date.now() - t <= d;);
+			}
+		</script>
+	</body>
+</html>
