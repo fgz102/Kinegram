@@ -97,9 +97,9 @@ button {
 
 #thankU{
 	position: fixed;
-	right: 0;
-	bottom: 0;
-	font-size: 10px;
+	right: 5px;
+	bottom: 5px;
+	font-size: 14px;
 	color: #FF0000;
 }
 
@@ -110,6 +110,6 @@ button {
 #thankU_again{
 	display: none;
 	position: absolute;
-	bottom: 10px;
+	bottom: 13px;
 	right: 0;
 }
