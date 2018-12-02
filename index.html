@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8" />
@@ -59,11 +59,27 @@
 			var y = 0;
 			var l = 0;
 			var t = 0;
-			cover.onmousedown = function(e) {
+			cover.ontouchstart = function(e){
+					e.preventDefault();
+					x = Number(e.touches[0].clientX);
+					l = cover.offsetLeft;
+				cover.ontouchmove = function(e1){
+					e.preventDefault();
+						var nx = Number(e1.touches[0].clientX);
+						var nl = nx - (x - l);
+						cover.style.left = nl + 'px';
+						if (cover.offsetLeft < 0) {
+							cover.style.left = '0px';
+						} else if (cover.offsetLeft + cover.clientWidth > head.offsetWidth) {
+							cover.style.left = head.offsetWidth - cover.clientWidth + 'px';
+					}
+				}
+			}
+			cover.onmousedown =  function(e) {
 				e.preventDefault();
 				x = e.clientX;
 				l = cover.offsetLeft;
-				cover.onmousemove = function(e) {
+				cover.onmousemove = cover.ontouchmove = function(e) {
 					e.preventDefault();
 					var nx = e.clientX;
 					var nl = nx - (x - l);
@@ -75,8 +91,8 @@
 					}
 				}
 			}
-			cover.onmouseup = function(e) {
-				cover.onmousemove = null;
+			cover.onmouseup = cover.ontouchend = function(e) {
+				cover.onmousemove = cover.ontouchmove = null;
 			}
 		</script>
 		<script type="text/javascript">
@@ -303,6 +319,23 @@
 				var trans_can = document.getElementsByClassName("trans_can");
 				for (var x = 0; x < trans_can.length; x++) {
 					trans_can[x].style.display = "none";
+				}
+			}
+
+cover_div.ontouchstart = function(e){
+					e.preventDefault();
+					x = Number(e.touches[0].clientX);
+					l = cover_div.offsetLeft;
+				cover_div.ontouchmove = function(e1){
+					e.preventDefault();
+						var nx = Number(e1.touches[0].clientX);
+						var nl = nx - (x - l);
+						cover_div.style.left = nl + 'px';
+						if (cover_div.offsetLeft < 0) {
+							cover_div.style.left = '0px';
+						} else if (cover_div.offsetLeft + cover_div.clientWidth > foot.offsetWidth) {
+							cover_div.style.left = foot.offsetWidth - cover_div.clientWidth + 'px';
+					}
 				}
 			}
 
